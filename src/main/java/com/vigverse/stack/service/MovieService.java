@@ -1,6 +1,7 @@
 package com.vigverse.stack.service;
 
 import com.vigverse.stack.dto.MovieDto;
+import com.vigverse.stack.dto.MoviePageResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -12,4 +13,6 @@ public interface MovieService {
     List<MovieDto> getAllMovies();
     MovieDto updateMovie(Integer movieId, MovieDto movieDto, MultipartFile file) throws IOException;
     String deleteMovie(Integer id) throws IOException;
+    MoviePageResponse getAllMoviesWithPagination(Integer pageNumber, Integer pageSize);
+    MoviePageResponse getAllMoviesWithPaginationAndSorting(Integer pageNumber, Integer pageSize, String sortBy, String dir);
 }

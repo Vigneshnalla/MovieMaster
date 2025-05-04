@@ -1,10 +1,16 @@
 package com.vigverse.stack.service;
 
 import com.vigverse.stack.dto.MovieDto;
+import com.vigverse.stack.dto.MoviePageResponse;
 import com.vigverse.stack.entities.Movie;
+import com.vigverse.stack.exceptions.MovieNotFoundException;
 import com.vigverse.stack.repositories.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,6 +41,7 @@ public class MovieServiceImpl implements MovieService{
     @Override
     public MovieDto addMovie(MovieDto movieDto, MultipartFile file) throws IOException {
         // upload the file
+        System.out.println("add movie");
         String uploadedFileName = fileService.uploadFile(path,file);
 
         // set the value of field poster as filename
@@ -56,7 +63,7 @@ public class MovieServiceImpl implements MovieService{
 
     @Override
     public MovieDto getMovie(Integer movieId) {
-        Movie movie = movieRepository.findById(movieId).orElseThrow(()-> new RuntimeException("Movie Not Found"));
+        Movie movie = movieRepository.findById(movieId).orElseThrow(()-> new MovieNotFoundException("Movie Not Found"));
         String posterUrl = baseUrl + "/file/"+ movie.getPoster();
         MovieDto movieDto = mapMovieToMovieDto(movie, posterUrl);
         return movieDto;
@@ -64,8 +71,6 @@ public class MovieServiceImpl implements MovieService{
 
     @Override
     public List<MovieDto> getAllMovies() {
-        String baseUrl = "http://localhost:8080"; // Or dynamically fetched
-
         List<Movie> movies = movieRepository.findAll();
         List<MovieDto> movieDtos = movies.stream()
                 .map(movie -> {
@@ -79,7 +84,7 @@ public class MovieServiceImpl implements MovieService{
 
     @Override
     public MovieDto updateMovie(Integer movieId, MovieDto movieDto, MultipartFile file) throws IOException {
-        Movie movie = movieRepository.findById(movieId).orElseThrow(()-> new RuntimeException("Movie Not found with given id"));
+        Movie movie = movieRepository.findById(movieId).orElseThrow(()-> new MovieNotFoundException("Movie Not found with given id"));
 
 
         if(file != null){
@@ -103,11 +108,55 @@ public class MovieServiceImpl implements MovieService{
 
     @Override
     public String deleteMovie(Integer id) throws IOException {
-        Movie movie = movieRepository.findById(id).orElseThrow(()-> new RuntimeException("Movie Not found with given id"));
+        Movie movie = movieRepository.findById(id).orElseThrow(()-> new MovieNotFoundException("Movie Not found with given id"));
         Files.deleteIfExists(Paths.get(path + File.separator + movie.getPoster()));
         movieRepository.deleteById(id);
         return "Movie Deleted with Id : "+ movie.getMovieId();
     }
+
+    @Override
+    public MoviePageResponse getAllMoviesWithPagination(Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber,pageSize);
+        Page<Movie> moviePages=movieRepository.findAll(pageable);
+        List<Movie> moviesList = moviePages.getContent();
+        List<MovieDto> movieDtos = moviesList.stream()
+                .map(movie -> {
+                    String posterUrl = baseUrl + "/file/" + movie.getPoster();
+                    return mapMovieToMovieDto(movie, posterUrl);
+                })
+                .collect(Collectors.toList());
+
+
+        return new MoviePageResponse(movieDtos,pageNumber,pageSize,
+                (int) moviePages.getTotalElements(),moviePages.getTotalPages(),moviePages.isLast());
+    }
+
+    @Override
+    public MoviePageResponse getAllMoviesWithPaginationAndSorting(Integer pageNumber, Integer pageSize, String sortBy, String dir) {
+        Sort sort = dir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() :
+                Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Movie> moviePages = movieRepository.findAll(pageable);
+
+        List<MovieDto> movieDtos = moviePages.getContent().stream()
+                .map(movie -> {
+                    String posterUrl = baseUrl + "/file/" + movie.getPoster();
+                    return mapMovieToMovieDto(movie, posterUrl);
+                })
+                .collect(Collectors.toList());
+
+        return new MoviePageResponse(
+                movieDtos,
+                pageNumber,
+                pageSize,
+                (int) moviePages.getTotalElements(),
+                moviePages.getTotalPages(),
+                moviePages.isLast()
+        );
+    }
+
+
 
     public Movie mapMovieDtoToMovie(MovieDto movieDto){
         Movie movie = new Movie(
