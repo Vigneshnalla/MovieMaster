@@ -1,0 +1,24 @@
+
+spring:
+  application:
+    name: BackendBridge
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/vigverse
+    username: root
+    password: PHW#84#jeor
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect
+      hibernate.format_sql: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+project:
+  poster: poster/
+
+base:
+  url: "http://localhost:8080"
