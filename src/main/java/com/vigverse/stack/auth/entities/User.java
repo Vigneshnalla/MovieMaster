@@ -47,10 +47,15 @@ public class User implements UserDetails {
 
     @OneToOne(mappedBy = "user")
     private RefreshToken refreshToken;
+
     private  boolean isEnabled=true;
     private  boolean isAccountNonExpired=true;
     private  boolean isAccountNonLocked=true;
     private  boolean isCredentialsNonExpired=true;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "forgot_password_id", referencedColumnName = "fpid")  // Ensure proper join column definition
+    private ForgotPassword forgotPassword;
 
     @Enumerated(EnumType.STRING)
     private UserRole userRole;

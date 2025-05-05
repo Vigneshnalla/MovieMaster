@@ -85,6 +85,11 @@
 			<artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson, jjwt-orgjson based on preference -->
 			<version>0.11.5</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
 
 		<!--		<dependency>-->
 <!--			<groupId>org.springframework.security</groupId>-->
